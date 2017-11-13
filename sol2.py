@@ -74,8 +74,8 @@ def IDFT2(fourier_image):
 
 
 def conv_der(im):
-    kernel = [1,0,-1]
-    #kernel = np.asarray(kernel)
+    kernel = [[0,0,0],[1,0,-1],[0,0,0]]
+    kernel = np.asarray(kernel)
     der_x = sig.convolve2d(im,kernel, mode='same')
     der_y = sig.convolve2d(im,kernel.transpose(), mode='same')
     return np.sqrt (np.abs(der_x)**2 + np.abs(der_y)**2)
@@ -86,8 +86,8 @@ def main():
     img = imread(name)
     b= [5.0, 7.1,5.6]
     b = np.asarray(b).astype(np.float64)
-    magnitude = conv_der(b)
-    a=3
+    magnitude = conv_der(img)
+    plt.imshow(magnitude)
 
 
 if __name__ == "__main__":
