@@ -4,102 +4,90 @@ from scipy.misc import imread as imread
 import matplotlib.pyplot as plt
 
 
-def exp_formula(shape, u, arr, sign):
+
+def get_vandermonde_matrix(shape, u, arr, sign):
     '''
-    compute the exp formula
+    compute the vandermonde matrix
     :param shape: the shape of the array
-    :param u:
+    :param u: (1,n) array containing the range (0, n-1)
+    :param arr: (n,1) array containing the range (0,n-1)
     :param sign: A boolean variable, where true means dft and false means idf
     :return: return a matrix that contains the calculation
     '''
-    #compute the input to euler formula
+
     if sign:
-        pre_input = np.divide(((-2j*np.pi)*u), shape)
+        return np.exp(-2j * np.pi * u * arr / shape)
     else:
-        pre_input = np.divide(((2j * np.pi) * u), shape)
-    exp_input =  arr *pre_input
-    #return the calculation euler formula
-    return np.exp(exp_input)
+        return np.exp(2j * np.pi * u * arr / shape)
 
 def DFT(signal):
     '''
     compute the discrete fourier transform
-    :param signal: a vector that encapsulates a row in a matrix
+    :param signal: a matrix of the signal in the spatial medium
     :return: An array of complex numbers that represent the signal in the frequency medium
     '''
     arr = np.arange(signal.shape[0])
     u = arr.reshape((signal.shape[0], 1))
-    # compute the fft matrix using exp formula
-    fft_matrix = exp_formula(signal.shape, u,arr , True)
+    # compute the vandermonde matrix
+    vandermonde_matrix = get_vandermonde_matrix(signal.shape[0], u, arr , True)
     #multiply the fft matrix with the vector of the signal
-    return np.dot(fft_matrix, signal)
+    return np.dot(vandermonde_matrix, signal)
 
 
 def IDFT(fourier_signal):
     '''
     compute the inverse discrete fourier transform
-    :param fourier_signal: a vector that encapsulates a row in a matrix
+    :param fourier_signal: a matrix of the signal in the frequency medium
     :return: An array of complex numbers that represent the signal in the spatial medium
     '''
     arr = np.arange(fourier_signal.shape[0])
     u = arr.reshape((fourier_signal.shape[0], 1))
     # compute the fft matrix using euler formula
 
-    fft_matrix = exp_formula(fourier_signal.shape, u, arr, False)
+    fft_matrix = get_vandermonde_matrix(fourier_signal.shape[0], u, arr, False)
     # multiply the inverse fft matrix with the vector of the signal
     iFourier_array = np.dot(fft_matrix, fourier_signal)
 
     #divide by the length of the fourier signal
-    normalized_idft = np.divide(iFourier_array,fourier_signal.shape)
+    normalized_idft = np.divide(iFourier_array,fourier_signal.shape[0])
     #todo decide if the origin array is real maybe use global variable
-    #ignore the imaginary values
-    #return np.real(normalized_idft)
     return normalized_idft
 
-def dft_image(image ):
-    fourier_image = np.asarray(image).astype(np.complex128)
-    for row in range(image.shape[0]):
-        fourier_image[row, :] = DFT(image[row, :])
-    return fourier_image
-
-
-def idft_image(fourier_image):
-    img = np.asarray(fourier_image).astype(np.float64)
-    for row in range(fourier_image.shape[0]):
-        img[row, :] = IDFT(fourier_image[row, :])
-    return img
 
 def DFT2(image):
-    arr = np.arange(image.shape[0])
-    u = arr.reshape((image.shape[0], 1))
-    fourier_image = dft_image(image)
-    fft_matrix = exp_formula(image.shape[0], u, arr, True)
-    return np.dot(fft_matrix, fourier_image)
+    '''
+    compute the discrete fourier transform for the 2d matrix
+    :param image: A n*m matrix that contain values in the spatial medium
+    :return: A complex n*m matrix that contain values in the frequency medium
+    '''
+    return DFT(DFT(image).transpose()).transpose()
 
 
 def IDFT2(fourier_image):
-    arr = np.arange(fourier_image.shape[0])
-    u = arr.reshape((fourier_image.shape[0], 1))
-    img = idft_image(fourier_image)
+    '''
+    compute the inverse discrete fourier transform for the 2d matrix
+    :param image: A n*m matrix that contain values in the frequency medium
+    :return: A complex n*m matrix that contain values in the spatial medium
+    '''
+    # todo check i need to ignore the imaginary values
+    return np.real(IDFT(IDFT(fourier_image).transpose()).transpose())
 
-    fft_matrix = exp_formula(fourier_image.shape[0], u, arr, False)
 
-    ifourier_matrix= np.divide(np.dot(fft_matrix, img),fourier_image.shape[0])
-    return np.real(ifourier_matrix)
-
+def conv_der(im):
+    kernel = [1,0,-1]
+    #kernel = np.asarray(kernel)
+    der_x = sig.convolve2d(im,kernel, mode='same')
+    der_y = sig.convolve2d(im,kernel.transpose(), mode='same')
+    return np.sqrt (np.abs(der_x)**2 + np.abs(der_y)**2)
 
 
 def main():
-    name = "logoGray.jpg"
+    name = "monkeyGray.jpg"
     img = imread(name)
-    a= [[1.2, 2.4],[5.0, 7.1], [6.5, 3.4]]
-    a=np.asarray(a).astype(np.float64)
-    # fourier = np.fft.fft2(img)
-    # ifourier = np.fft.ifft2(fourier).astype(np.uint8)
-    # plt.imshow(ifourier)
-    f= DFT2(a)
-    i_f = IDFT2(f)
-    v=4
+    b= [5.0, 7.1,5.6]
+    b = np.asarray(b).astype(np.float64)
+    magnitude = conv_der(b)
+    a=3
 
 
 if __name__ == "__main__":
