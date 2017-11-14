@@ -81,13 +81,32 @@ def conv_der(im):
     return np.sqrt (np.abs(der_x)**2 + np.abs(der_y)**2)
 
 
+def fourier_der(im):
+    row = np.arange(im.shape[0]) -(im.shape[0]//2)
+    row = np.asarray(row)
+    col = np.arange(im.shape[1]) - (im.shape[1] // 2)
+    xu, yv = np.meshgrid(row,col)
+
+    frequency_signal = DFT2(im)
+    shift_signal = np.fft.fftshift(frequency_signal)
+    u_der = xu* shift_signal
+    v_der = yv * shift_signal
+
+    u_der = np.fft.ifftshift(u_der)
+    v_der = np.fft.ifftshift(v_der)
+
+    im_u = IDFT2(u_der)
+    im_v  =IDFT2(v_der)
+    return np.sqrt (np.abs(im_u)**2 + np.abs(im_v)**2)
+
+
 def main():
-    name = "monkeyGray.jpg"
+    name = "gray_orig.png"
     img = imread(name)
-    b= [5.0, 7.1,5.6]
+    b= [[5.0, 7.1,5.6,7.6],[3.4,5.1,5.8,8.5],[1.3,3.5, 7.6,9.0]]
     b = np.asarray(b).astype(np.float64)
     magnitude = conv_der(img)
-    plt.imshow(magnitude)
+    plt.imshow(magnitude,cmap= plt.cm.gray)
 
 
 if __name__ == "__main__":
