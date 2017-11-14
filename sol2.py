@@ -70,7 +70,7 @@ def IDFT2(fourier_image):
     :return: A complex n*m matrix that contain values in the spatial medium
     '''
     # todo check i need to ignore the imaginary values
-    return np.real(IDFT(IDFT(fourier_image).transpose()).transpose())
+    return IDFT(IDFT(fourier_image).transpose()).transpose()
 
 
 def conv_der(im):
@@ -107,6 +107,10 @@ def main():
     b = np.asarray(b).astype(np.float64)
     magnitude = fourier_der(img)
     plt.imshow(magnitude,cmap= plt.cm.gray)
+    plt.show()
+    magnitude = conv_der(img)
+    plt.imshow(magnitude, cmap=plt.cm.gray)
+    plt.show()
 
 
 if __name__ == "__main__":
