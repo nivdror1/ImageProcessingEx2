@@ -74,29 +74,51 @@ def IDFT2(fourier_image):
 
 
 def conv_der(im):
+    '''
+    compute the magnitude of the image by using convolution with the ReLU kernel
+    :param im: The input image as a matrix
+    :return: return the magnitude
+    '''
+    # The ReLU kernel
     kernel = [[0,0,0],[1,0,-1],[0,0,0]]
     kernel = np.asarray(kernel)
+
+    # The x and y derivative using convolution with the ReLU kernel
     der_x = sig.convolve2d(im,kernel, mode='same')
     der_y = sig.convolve2d(im,kernel.transpose(), mode='same')
+    # compute the magnitude
     return np.sqrt (np.abs(der_x)**2 + np.abs(der_y)**2)
 
 
 def fourier_der(im):
+    '''
+    Compute the magnitude of the image by using the DFT
+    :param im: The input image as a matrix
+    :return: return the magnitude
+    '''
+    # Set up the array indices
     row = np.arange(im.shape[0]) -(im.shape[0]//2)
-    row = np.asarray(row).reshape(len(row),1)
+    row = np.asarray(row).reshape(len(row), 1)
     col = np.arange(im.shape[1]) - (im.shape[1] // 2)
 
-
+    # Perform the DFT
     frequency_signal = DFT2(im)
+    # Shift the frequency signal so the (0,0) pixel will be in the center
     shift_signal = np.fft.fftshift(frequency_signal)
+
+    # Compute the x and y derivative
     u_der = row* shift_signal
     v_der = col * shift_signal
 
+    # Shift the frequency signal so the (0,0) pixel will be in the top-left
     u_der = np.fft.ifftshift(u_der)
     v_der = np.fft.ifftshift(v_der)
 
+    # Perform the IDFT
     im_u = IDFT2(u_der)
     im_v  =IDFT2(v_der)
+
+    # Compute the magnitude
     return np.sqrt (np.abs(im_u)**2 + np.abs(im_v)**2)
 
 
