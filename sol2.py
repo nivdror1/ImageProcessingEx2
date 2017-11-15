@@ -129,28 +129,30 @@ def get_gaussian_kernel(kernel_size):
     :return: The matrix that contain the gaussian kernel
     '''
     kernel_row = [1, 1]
+    bin_vec = kernel_row.copy()
     #if the size is one return the gaussian kernel [1]
     if kernel_size == 1:
         gaussian_kernel = [1]
         return np.asarray(gaussian_kernel)
 
     # use convolution to achieve the binomy co-efficient
-    while kernel_size != 1:
-        kernel_row = sig.convolve(kernel_row, kernel_row)
-        #todo fix it!!!! grow too much
-        kernel_size -=2
+    while kernel_size != 2:
+        kernel_row = sig.convolve(kernel_row, bin_vec)
+        kernel_size -=1
     # get the matrix and divide it the by the sum of the values
     kernel_col = kernel_row.reshape(len(kernel_row), 1)
     gaussian_kernel =  kernel_row*kernel_col
     return gaussian_kernel/gaussian_kernel.sum()
 
 def blur_spatial(im, kernel_size):
-
+    # todo deal with 1 kernel size
+    # todo deal with im as float 64
+    # todo deal with the padding
     gaussian_kernel = get_gaussian_kernel(kernel_size)
     return sig.convolve2d(im,gaussian_kernel, mode='same').astype(np.uint8)
 
 def main():
-    name = "gray_orig.png"
+    name = "monkeyGray.jpg"
     img = imread(name)
     b= [[5.0, 7.1,5.6,7.6],[3.4,5.1,5.8,8.5],[1.3,3.5, 7.6,9.0]]
     b = np.asarray(b).astype(np.float64)
@@ -160,7 +162,7 @@ def main():
     # magnitude = conv_der(img)
     # plt.imshow(magnitude, cmap=plt.cm.gray)
     # plt.show()
-    rim = blur_spatial(img, 11)
+    rim = blur_spatial(img, 1)
     plt.imshow(rim, cmap=plt.cm.gray)
     plt.show()
 
