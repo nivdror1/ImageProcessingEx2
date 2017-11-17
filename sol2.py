@@ -2,7 +2,7 @@ import numpy as np
 import scipy.signal as sig
 from scipy.misc import imread as imread
 import matplotlib.pyplot as plt
-
+import ex1
 
 
 def get_vandermonde_matrix(shape, u, arr, sign):
@@ -132,7 +132,7 @@ def get_gaussian_kernel(kernel_size):
     bin_vec = kernel_row.copy()
     #if the size is one return the gaussian kernel [1]
     if kernel_size == 1:
-        gaussian_kernel = [1]
+        gaussian_kernel = [[0,0,0],[0,1,0],[0,0,0]]
         return np.asarray(gaussian_kernel)
 
     # use convolution to achieve the binomy co-efficient
@@ -145,24 +145,77 @@ def get_gaussian_kernel(kernel_size):
     return gaussian_kernel/gaussian_kernel.sum()
 
 def blur_spatial(im, kernel_size):
-    # todo deal with 1 kernel size
-    # todo deal with im as float 64
-    # todo deal with the padding
+    '''
+    Blur the image using convolution in the spatial space
+    :param im: The original image
+    :param kernel_size: The size of a row/column of the gaussian filter
+    :return: A blurred image
+    '''
+    # todo deal with the padding - not sure if the boundary option suffice
+    #Get the kernel
     gaussian_kernel = get_gaussian_kernel(kernel_size)
-    return sig.convolve2d(im,gaussian_kernel, mode='same').astype(np.uint8)
+    #use convolution in order to blur the image
+    return sig.convolve2d(im,gaussian_kernel, mode='same', boundary='symm')
+
+
+def kernel_padding(gaussian_kernel, rows, cols):
+    '''
+    Pad the gaussian kernel so it will match the image size
+    :param gaussian_kernel: The unpadded gaussian kernel
+    :param rows: The image rows
+    :param cols: The image columns
+    :return: The padded gaussian kernel
+    '''
+    kernel_size = gaussian_kernel.shape[0]
+    #defining the padding
+    left = int(cols//2-kernel_size//2)
+    top = int(rows//2-kernel_size//2)
+    right = int(cols - left - kernel_size)
+    bottom = int(rows - top - kernel_size)
+
+    #pad the kernel
+    return np.lib.pad(gaussian_kernel, ((top, bottom), (left, right)), 'constant', constant_values=0)
+
+
+def blur_fourier(im, kernel_size):
+    '''
+    Blur the image via multipling the fourier transform of the kernel and the image
+    :param im: The original image
+    :param kernel_size: the kernel rows/columns size
+    :return: A blurred image
+    '''
+    # Get the gaussian kernel
+    gaussian_kernel = get_gaussian_kernel(kernel_size)
+    #pad the gaussian kernel
+    padded_kernel = kernel_padding(gaussian_kernel, im.shape[0], im.shape[1])
+
+    # Use fourier transform on the gaussian kernel and shift the center to (0,0)
+    fourier_kernel = DFT2(padded_kernel)
+    shifted_fouier_kernel = np.fft.ifftshift(fourier_kernel)
+
+    #Use fourier transform on the image
+    fourier_img = DFT2(im)
+
+    #pointwise multiply and transform the result back to the spatial space
+    result= IDFT2(fourier_kernel * fourier_img)
+    return np.real(np.fft.fftshift(result))
+
+
+
+
 
 def main():
     name = "monkeyGray.jpg"
-    img = imread(name)
-    b= [[5.0, 7.1,5.6,7.6],[3.4,5.1,5.8,8.5],[1.3,3.5, 7.6,9.0]]
+    img = ex1.read_image(name, 1)
+    b= [[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1]]
     b = np.asarray(b).astype(np.float64)
     # magnitude = fourier_der(img)
     # plt.imshow(magnitude,cmap= plt.cm.gray)
     # plt.show()
     # magnitude = conv_der(img)
-    # plt.imshow(magnitude, cmap=plt.cm.gray)
+    # plt.imshow(img, cmap=plt.cm.gray)
     # plt.show()
-    rim = blur_spatial(img, 1)
+    rim = blur_fourier(img, 1)
     plt.imshow(rim, cmap=plt.cm.gray)
     plt.show()
 
