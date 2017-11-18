@@ -2,8 +2,27 @@ import numpy as np
 import scipy.signal as sig
 from scipy.misc import imread as imread
 import matplotlib.pyplot as plt
-import ex1
+from skimage.color import rgb2gray
 
+
+def read_image(filename, representation):
+    """
+    read the image and convert it to gray scale if necessary
+    :param filename: the image
+    :param representation: gray scale or RGB format to which the image is to be converted
+    :return: A image whose values are normalized and in the given representation
+    """
+    if( representation < 1 or representation > 2):
+        return -1
+
+    #read the image
+    img = imread(filename)
+
+    #todo  check if the image is proper/ maybe check if the suffix is jpg,gif and etc
+    #convert the RGB image to gray scale image
+    if len(img.shape) == 3 and representation == 1:
+        return rgb2gray(img)
+    return np.divide(img.astype(np.float64), 255)
 
 def get_vandermonde_matrix(shape, u, arr, sign):
     '''
@@ -107,8 +126,8 @@ def fourier_der(im):
     shift_signal = np.fft.fftshift(frequency_signal)
 
     # Compute the x and y derivative
-    u_der = row* shift_signal
-    v_der = col * shift_signal
+    u_der = (row* shift_signal)*((2*np.pi*1j)/im.shape[0])#todo check if this is the constant
+    v_der = (col * shift_signal)*((2*np.pi*1j)/im.shape[1])
 
     # Shift the frequency signal so the (0,0) pixel will be in the top-left
     u_der = np.fft.ifftshift(u_der)
@@ -142,6 +161,7 @@ def get_gaussian_kernel(kernel_size):
     # get the matrix and divide it the by the sum of the values
     kernel_col = kernel_row.reshape(len(kernel_row), 1)
     gaussian_kernel =  kernel_row*kernel_col
+    #todo I have divide by zero exception when the kernel size is >15
     return gaussian_kernel/gaussian_kernel.sum()
 
 def blur_spatial(im, kernel_size):
@@ -206,18 +226,21 @@ def blur_fourier(im, kernel_size):
 
 def main():
     name = "monkeyGray.jpg"
-    img = ex1.read_image(name, 1)
+    img = read_image(name, 1)
     b= [[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1]]
     b = np.asarray(b).astype(np.float64)
-    # magnitude = fourier_der(img)
-    # plt.imshow(magnitude,cmap= plt.cm.gray)
-    # plt.show()
-    # magnitude = conv_der(img)
-    # plt.imshow(img, cmap=plt.cm.gray)
-    # plt.show()
-    rim = blur_fourier(img, 1)
-    plt.imshow(rim, cmap=plt.cm.gray)
+    magnitude = fourier_der(img)
+    plt.imshow(magnitude,cmap= plt.cm.gray)
     plt.show()
+    magnitude2 = conv_der(img)
+    # plt.imshow(magnitude2, cmap=plt.cm.gray)
+    # plt.show()
+    if np.array_equal(magnitude, magnitude2):
+        plt.imshow(magnitude2, cmap=plt.cm.gray)
+        plt.show()
+    # rim = blur_spatial(img, 17)
+    # plt.imshow(rim, cmap=plt.cm.gray)
+    # plt.show()
 
 
 
