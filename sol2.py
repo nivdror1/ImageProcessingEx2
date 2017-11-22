@@ -18,7 +18,6 @@ def read_image(filename, representation):
     #read the image
     img = imread(filename)
 
-    #todo  check if the image is proper/ maybe check if the suffix is jpg,gif and etc
     #convert the RGB image to gray scale image
     if len(img.shape) == 3 and representation == 1:
         return rgb2gray(img)
@@ -68,9 +67,8 @@ def IDFT(fourier_signal):
     iFourier_array = np.dot(fft_matrix, fourier_signal)
 
     #divide by the length of the fourier signal
-    normalized_idft = np.divide(iFourier_array,fourier_signal.shape[0])
-    #todo decide if the origin array is real maybe use global variable
-    return normalized_idft
+    return np.divide(iFourier_array,fourier_signal.shape[0])
+
 
 
 def DFT2(image):
@@ -126,7 +124,7 @@ def fourier_der(im):
     shift_signal = np.fft.fftshift(frequency_signal)
 
     # Compute the x and y derivative
-    u_der = (row* shift_signal)*((2*np.pi*1j)/im.shape[0])#todo check if this is the constant
+    u_der = (row* shift_signal)*((2*np.pi*1j)/im.shape[0])
     v_der = (col * shift_signal)*((2*np.pi*1j)/im.shape[1])
 
     # Shift the frequency signal so the (0,0) pixel will be in the top-left
@@ -151,8 +149,10 @@ def get_gaussian_kernel(kernel_size):
     bin_vec = kernel_row.copy()
     #if the size is one return the gaussian kernel [1]
     if kernel_size == 1:
-        gaussian_kernel = [[0,0,0],[0,1,0],[0,0,0]]
-        return np.asarray(gaussian_kernel)
+        gaussian_kernel = [1]
+        return np.asarray(gaussian_kernel).reshape(1,1)
+        # gaussian_kernel = [[0,0,0],[0,1,0],[0,0,0]]
+        # return np.asarray(gaussian_kernel)
 
     # use convolution to achieve the binomy co-efficient
     while kernel_size != 2:
@@ -161,7 +161,6 @@ def get_gaussian_kernel(kernel_size):
     # get the matrix and divide it the by the sum of the values
     kernel_col = kernel_row.reshape(len(kernel_row), 1)
     gaussian_kernel =  kernel_row*kernel_col
-    #todo I have divide by zero exception when the kernel size is >15
     return gaussian_kernel/gaussian_kernel.sum()
 
 def blur_spatial(im, kernel_size):
@@ -171,7 +170,6 @@ def blur_spatial(im, kernel_size):
     :param kernel_size: The size of a row/column of the gaussian filter
     :return: A blurred image
     '''
-    # todo deal with the padding - not sure if the boundary option suffice
     #Get the kernel
     gaussian_kernel = get_gaussian_kernel(kernel_size)
     #use convolution in order to blur the image
@@ -210,36 +208,36 @@ def blur_fourier(im, kernel_size):
     padded_kernel = kernel_padding(gaussian_kernel, im.shape[0], im.shape[1])
 
     # Use fourier transform on the gaussian kernel and shift the center to (0,0)
-    fourier_kernel = DFT2(padded_kernel)
-    shifted_fouier_kernel = np.fft.ifftshift(fourier_kernel)
+    fourier_kernel = DFT2(np.fft.ifftshift(padded_kernel))
 
     #Use fourier transform on the image
     fourier_img = DFT2(im)
 
     #pointwise multiply and transform the result back to the spatial space
-    result= IDFT2(fourier_kernel * fourier_img)
-    return np.real(np.fft.fftshift(result))
+    return np.real(IDFT2(fourier_kernel * fourier_img))
+
 
 
 
 
 
 def main():
-    name = "monkeyGray.jpg"
+    name = "gray_orig.png"
     img = read_image(name, 1)
     b= [[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1]]
     b = np.asarray(b).astype(np.float64)
-    magnitude = fourier_der(img)
-    plt.imshow(magnitude,cmap= plt.cm.gray)
-    plt.show()
-    magnitude2 = conv_der(img)
+    # magnitude = fourier_der(img)
+    # plt.imshow(magnitude,cmap= plt.cm.gray)
+    # plt.show()
+    # magnitude2 = conv_der(img)
     # plt.imshow(magnitude2, cmap=plt.cm.gray)
     # plt.show()
-    if np.array_equal(magnitude, magnitude2):
-        plt.imshow(magnitude2, cmap=plt.cm.gray)
-        plt.show()
-    # rim = blur_spatial(img, 17)
-    # plt.imshow(rim, cmap=plt.cm.gray)
+
+    rim = blur_fourier(img, 1)
+    plt.imshow(rim, cmap=plt.cm.gray)
+    plt.show()
+    # im = np.real(IDFT2(DFT2(img)))
+    # plt.imshow(im,cmap=plt.cm.gray)
     # plt.show()
 
 

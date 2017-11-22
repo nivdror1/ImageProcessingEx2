@@ -1,4 +1,5 @@
 Q3:
-The results of the blurring filters are the same because of the convolution theorem.
-The theorem states that the convolution between f and \g
-is equal to the pointwise multiplication of the F and G (which are the fourier representation of f and g)
+    The results of the blurring filters are the same because of the convolution theorem.
+    The theorem states that the convolution between f and g
+    is equal to the pointwise multiplication of the F and G (which are the fourier representation of f and g).
+    After the pointwise multiplication we perform IDFT on the result.

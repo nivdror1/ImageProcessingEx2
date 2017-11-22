@@ -1,0 +1,5 @@
+Q2:
+    If the gaussian kernel isn't shifted when the image is presented, four images will appear,
+    each one is a quarter of the original image.
+    The cause for this phenomenon is that the gaussian kernel isn't centralized around the coordination (0,0).
+    This will cause pointwise multiplication of the fourier image with the  a wrong pixels.
